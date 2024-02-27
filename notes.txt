@@ -1,0 +1,203 @@
+create folder bookstore-> open folder in VS code
+create 2 new folder nameing backend | frontend
+
+open terminal goto backend folder by "cd backend"
+npm init -y -> package.json file will be created 
+inside package.json add `"type": "module"` this line under `description`
+
+add 2 another module `express.js and nodemon` by `npm i express nodemon`
+
+add `"start": "node index.js", | "dev": "nodemon index.js"` line under scripts by removing existing line called "tests"
+
+create `index.js | config.js` inside backend folder
+
+inside config export PORT variable with value
+
+inside index.js -> type
+
+        import express from "express";
+        import {PORT} from "./config.js";
+
+        const app = express();
+
+        app.listen(PORT, ()=>{
+            console.log(`App is listening to port: ${PORT}`);
+        });
+
+run to by `npm run dev`
+
+check to PORT req and res status code in browser console in network section
+
+now add route in index.js
+
+        app.get('/', (request, response) => {
+        console.log(request);
+        return response.status(234).send('Welcome to MERN Stack');
+        });
+
+Add mongoDB and Moongoose
+
+create DB in cloud MongoDB website 
+
+add this line `export const dbURL = "mongodb+srv://root:root@bookstore.62fk0ry.mongodb.net/?retryWrites=true&w=majority&appName=bookstore";` inside config.js
+
+we need mongoose library to use MongoDB `npm i mongoose` then import to index.js file
+
+create book model with mongoose
+
+create folder `models-> bookModels.js`
+    `
+        import mongoose from "mongoose";
+
+        const bookSchema = mongoose.Schema(
+            {
+                title: {
+                    type: String,
+                    required: true,
+                },
+                author: {
+                    type: String,
+                    required: true,
+                },
+                publishYear: {
+                    type: Number,
+                    required: true,
+                },
+            },
+            {
+                timestamps: true,
+            }
+        );
+
+        export const Book = mongoose.model('Book', bookSchema);
+    `
+
+saving book details
+
+for this we need to install post man locally `https://web.postman.co/`
+
+and create new HTTP request `body -> raw -> {
+                                                "title" : "dssd",
+                                                "author" : "Desd",
+                                                "publishYear" : 2022
+                                            } 
+                                            ` 
+                                            copy paste and get `op` as 
+                                            `
+                                            {
+                                                "title": "dssd",
+                                                "author": "Desd",
+                                                "publishYear": 2022,
+                                                "_id": "65dda08dd7e443cd884f0bee",
+                                                "createdAt": "2024-02-27T08:42:53.135Z",
+                                                "updatedAt": "2024-02-27T08:42:53.135Z",
+                                                "__v": 0
+                                            }
+                                            `
+                                        
+Get book ID with mongoose
+
+type it in `
+                //Route to GET All Books from DB
+                app.get('/books', async (request, response) => {
+                    try {
+                        const books = await Book.find({});
+                        return response.status(200).json({
+                            count: books.length,
+                            data:books
+                        });
+                    } catch (error) {
+                        console.log(error.message);
+                        response.status(500).send({ message: error.message });
+                    }
+                });
+            `
+
+            and test in postman
+
+            should return this op
+
+            `
+                {
+                    "count": 1,
+                    "data": [
+                        {
+                            "_id": "65dda08dd7e443cd884f0bee",
+                            "title": "dssd",
+                            "author": "Desd",
+                            "publishYear": 2022,
+                            "createdAt": "2024-02-27T08:42:53.135Z",
+                            "updatedAt": "2024-02-27T08:42:53.135Z",
+                            "__v": 0
+                        }
+                    ]
+                }
+            `
+Get One Book by id with DB
+type in this and test in postman webiste by GET method with folling URL `http://localhost:5555/books/id` with raw data input //cp id from DB op
+`
+    //Route to GET ONE Books from DB by id
+    app.get('/books/:id', async (request, response) => {
+        try {
+            const {id} = request.params;
+            const book = await Book.findById(id);
+            return response.status(200).json(book);
+        } catch (error) {
+            console.log(error.message);
+            response.status(500).send({ message: error.message });
+        }
+    });
+`
+
+Update book with DB
+
+//Route to Update a Book
+
+app.put('/books/:id', async (request, response) => {
+    try {
+        if (
+            !request.body.title ||
+            !request.body.author ||
+            !request.body.publishYear
+        ) {
+            return response.status(400).send({
+                message: 'Send all required fields: title, author, publishYear',
+            });
+        }
+
+        const {id} = request.params;
+
+        const result = await Book.findByIdAndUpdate(id, request.body);
+
+        if(!result) return response.status(404).json({message:'Book Not Found'});
+
+        return response.status(200).send({message: 'Book Updated Successfully'});
+
+    } catch (error) {
+        console.log(error.message);
+        response.status(500).send({ message: error.message });
+    }
+});
+
+type in this and test in postman webiste by PUT method with folling URL `http://localhost:5555/books/id` with raw data input //cp id from DB op
+
+//Delete book with DB
+
+`
+    //Route Delete a book
+    app.delete('/books/:id', async (request, response) => {
+        try {
+            const { id } = request.params;
+
+            const result = await Book.findByIdAndDelete(id);
+
+            if (!result) return response.status(404).json({ message: 'Book Not Found' });
+
+            return response.status(200).send({ message: 'Book Delete Successfully' });
+        } catch (error) {
+            console.log(error.message);
+            response.status(500).send({ message: error.message });
+        }
+    });
+`
+type in this and test in postman webiste by DEL method with folling URL `http://localhost:5555/books/id` with raw data input //cp id from DB op
