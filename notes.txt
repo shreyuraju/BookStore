@@ -1,3 +1,4 @@
+//https://www.youtube.com/watch?v=-42K44A1oMA
 create folder bookstore-> open folder in VS code
 create 2 new folder nameing backend | frontend
 
@@ -74,7 +75,7 @@ create folder `models-> bookModels.js`
 
 saving book details
 
-for this we need to install post man locally `https://web.postman.co/`
+for this we need to install post man locally `https://web.postman.co/`   `http://localhost:5555/books/`
 
 and create new HTTP request `body -> raw -> {
                                                 "title" : "dssd",
@@ -201,3 +202,318 @@ type in this and test in postman webiste by PUT method with folling URL `http://
     });
 `
 type in this and test in postman webiste by DEL method with folling URL `http://localhost:5555/books/id` with raw data input //cp id from DB op
+
+
+creating middleware Route
+
+cut the routes in index.js and create new folder routes->new file bookRoute.js and paste the route inside
+
+`
+import express from 'express';
+import { Book } from '../models/bookModel.js';
+
+const router = express.Router();
+`
+
+import express and book models, add router and rename `app` to `router` and export reouter as default `export default router;`
+import booksroute & `app.use('/books', booksRoute);` add this in index.js
+
+remove `books` for reduntant keep only `/`
+
+and check the routes working in postman
+
+
+CORS policy
+Cross-Origin Resource Sharing
+
+install `npm i cors` inside server
+
+import cors from 'cors';
+
+//option 1: Allow All Origins with Default of cors(*)
+
+// app.use(cors());
+
+//option 2: Allow Custom Origins
+app.use(
+    cors({
+        origin: 'http://localhost:3000',
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        allowedHeaders: ['Content-Type'],
+    })
+);
+
+keep option 2
+
+NOW CRETE front end using vite `npm create vite@latest`
+projectname-> select framework `react` -> select variant `javascript`
+
+cd frontend -> npm i
+
+install tailwindcss
+
+https://tailwindcss.com/docs/guides/vite
+
+npm install -D tailwindcss postcss autoprefixer
+
+npx tailwindcss init -p
+
+cp `"./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}", `
+    inside tailwind.config.js
+
+cp 
+`@tailwind base;
+@tailwind components;
+@tailwind utilities;`
+
+inside index.css by deleteing existing codes
+
+delete `App.css`
+
+SPA and ADD react router dom
+
+`npm i react-router-dom`
+
+inside `main.jsx` import `import { BrowserRouter } from 'react-router-dom';`
+cp in app components
+`<BrowserRouter>`
+
+
+import `import { Routes,Route } from 'react-router-dom';` in `App.jsx`
+`<Routes>
+    <route path='' element={} />
+    <route path='' element={} />
+    <route path='' element={} />
+    <route path='' element={} />
+    <route path='' element={} />
+</Routes>`
+
+create new folder `pages`
+create 5 file names
+`create.jsx, delete.jsx, edit.jsx, show.jsx, home.jsx`
+and and elements by `rafc` from `ES7+` extention
+
+import 
+`
+import Home from './pages/Home';
+import CreateBooks from './pages/CreateBooks';
+import ShowBook from './pages/ShowBook';
+import EditBook from './pages/EditBook';
+import DeleteBook from './pages/DeleteBook';
+`
+inside `App.jsx`
+
+and add path and element
+`
+<Routes>
+      <route path='/' element={<Home/>} />
+      <route path='/books/create' element={<CreateBooks/>} />
+      <route path='/books/details/:id' element={<ShowBook/>} />
+      <route path='/books/edit/:id' element={<EditBook/>} />
+      <route path='/books/delete/:id' element={<DeleteBook/>} />
+    </Routes>
+`
+
+
+show books
+
+install `npm i axios react-icons` for icons
+
+comment CORS custom origin in index.js at backend and run the server
+
+create folder `components` inside src 
+create file `spinner.jsx`
+type below code inside
+`
+    import React from 'react'
+
+    const Spinner = () => {
+    return (
+        <div className='animate-ping w-16 h-16 m-8 rounded-full bg-sky-600'></div>
+    )
+    }
+
+    export default Spinner
+`
+now in `Home.jsx` import
+`
+    import axios from 'axios';
+    import Spinner from '../components/Spinner';
+    import {Link} from 'react-router-dom';
+    import {AiOutlineEdit} from 'react-icons/ai';
+    import {BsInfoCircle} from 'react-icons/bs';
+    import {MdOutlineAddBox, MdOutlineDelete} from 'react-icons/md';
+`
+
+and create useStates
+`
+const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(false);
+`
+
+creaete useEffect from loading
+`
+    useEffect(() => {
+        setLoading(true);
+        axios
+        .get('http://localhost:5555/books')
+        .then((response) => {
+            setBooks(response.data.data);
+            setLoading(false);
+        })
+        .catch((error) => {
+            console.log(error);
+            setLoading(false);
+        });
+    }, []);
+`
+
+creat conditon for Loading
+`
+<div className='p-4'>
+      <div className='flex justify-between items-center'>
+        <h1 className='text-3xl my-8'>Book List</h1>
+        <Link to='/books/create'>
+          <MdOutlineAddBox className='text-sky-800 text-4xl' />
+        </Link>
+      </div>
+      {loading ? (
+        <Spinner />
+      ) : (
+        
+      )}
+    </div>
+`
+type-in table content
+
+`
+        <table className='w-full border-seperate border-spacing-2'>
+          <thead>
+            <tr>
+              <th className='border border-slate-600 rounded-md'>No</th>
+              <th className='border border-slate-600 rounded-md'>Title</th>
+              <th className='border border-slate-600 rounded-md max-md:hidden'>author</th>
+              <th className='border border-slate-600 rounded-md max-md:hidden'>Publish Year</th>
+              <th className='border border-slate-600 rounded-md'>Operations</th>
+            </tr>
+          </thead>
+          <tbody>
+            {books.map((book, index) => (
+              <tr key={book._id} className='h-8'>
+                <td className='border border-slate-700 rounded-md text-center'>{index + 1}</td>
+                <td className='border border-slate-700 rounded-md text-center'>{book.title}</td>
+                <td className='border border-slate-700 rounded-md text-center max-md:hidden'>{book.author}</td>
+                <td className='border border-slate-700 rounded-md text-center max-md:hidden'>{book.publishYear}</td>
+                <td className='border border-slate-700 rounded-md text-center'>
+                  <div className='flex justify-center gap-x-4'>
+                    <Link to={`/books/details/${book._id}`}>
+                      <BsInfoCircle className='text-2xl text-yellow-600' />
+                    </Link>
+                    <Link to={`/books/edit/${book._id}`}>
+                      <AiOutlineEdit className='text-2xl text-yellow-600' />
+                    </Link>
+                    <Link to={`/books/delete/${book._id}`}>
+                      <MdOutlineDelete className='text-2xl text-red-600' />
+                    </Link>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+`
+
+create backbutton.jsx in compoent folder to create back backbutton
+
+`
+import React from 'react'
+import {Link} from 'react-router-dom';
+import {BsArrowLeft} from 'react-icons/bs';
+
+const BackButton = ({destination = '/'}) => {
+  return (
+    <div className='flex'>
+      <Link to={destination} className='bg-sky-800 text-white px-4 py-1 rounded-lg w-fit'>
+        <BsArrowLeft className='text-2xl' />
+      </Link>
+    </div>
+  )
+}
+
+export default BackButton
+
+`
+
+Showing Book details
+
+import necessary items
+
+`
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
+import BackButton from '../components/BackButton';
+import Spinner from '../components/Spinner';
+`
+
+create consts and add useEffect
+
+`
+const [book, setBook] = useState({});
+  const [loading, setLoading] = useState(false);
+  const { id } = useParams();
+
+  useEffect(() => {
+    setLoading(true);
+    axios
+      .get(`http://localhost:5555/books/${id}`)
+      .then((response) => {
+        setBook(response.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setLoading(false);
+      });
+  }, [])
+`
+
+in return statement
+
+`
+    <div className='p-4'>
+      <BackButton />
+      <h1 className='text-3xl my-4'>Show Book</h1>
+      {loading ? (
+        <Spinner />
+      ) : (
+        <div className='flex flex-col border-2 border-sky-400 rounded-xl w-fit p-4'>
+          <div className='my-4'>
+            <span className='text-xl mr-4 text-gray-500'>Id:</span>
+            <span>{book._id}</span>
+          </div>
+          <div className='my-4'>
+            <span className='text-xl mr-4 text-gray-500'>Title:</span>
+            <span>{book.title}</span>
+          </div>
+          <div className='my-4'>
+            <span className='text-xl mr-4 text-gray-500'>Author:</span>
+            <span>{book.author}</span>
+          </div>
+          <div className='my-4'>
+            <span className='text-xl mr-4 text-gray-500'>Publish Year:</span>
+            <span>{book.publishYear}</span>
+          </div>
+          <div className='my-4'>
+            <span className='text-xl mr-4 text-gray-500'>Create Time:</span>
+            <span>{new Date(book.createdAt).toString()}</span>
+          </div>
+          <div className='my-4'>
+            <span className='text-xl mr-4 text-gray-500'>Last Update Time:</span>
+            <span>{new Date(book.updatedAt).toString()}</span>
+          </div>
+        </div>
+      )}
+    </div>
+`
