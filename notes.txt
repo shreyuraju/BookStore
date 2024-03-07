@@ -1,4 +1,8 @@
 #https://www.youtube.com/watch?v=-42K44A1oMA
+
+backend->npm run dev
+frontend-> npm run dev
+
 create folder bookstore-> open folder in VS code
 create 2 new folder nameing backend | frontend
 
